@@ -1,0 +1,20 @@
+name: Main Branch Success Response
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        types:
+            - closed
+
+jobs:
+    notify:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Check Event
+              run: echo "Event detected on the main branch."
+
+            - name: Print Success Response
+              run: echo "Code pushed to the main branch or a pull request was merged successfully."
