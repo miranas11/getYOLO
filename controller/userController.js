@@ -4,7 +4,6 @@ export async function createUser(req, res) {
     const user = new User(req.body);
     try {
         await user.save();
-        req.session.user_id = user._id;
         res.json({
             status: true,
             data: { message: "User Created Succesfully" },
@@ -15,17 +14,9 @@ export async function createUser(req, res) {
     }
 }
 
-export async function showUserById(req, res) {
-    console.log(req.params.id);
-    const user = await findById(req.params.id).populate({
-        path: "posts",
-        select: "body",
-    });
-    res.send(user);
-}
-
 export async function validateUser(req, res) {
     const { email, password } = req.body;
+    const isForced = req.query.forced;
     if (req.session.user_id)
         return res.json({
             status: false,
@@ -35,7 +26,12 @@ export async function validateUser(req, res) {
         });
 
     try {
-        const user = await User.findAndValidate(email, password);
+        const user = await User.findAndValidate(
+            req.sessionID,
+            email,
+            password,
+            isForced
+        );
         req.session.user_id = user._id;
         res.json({
             status: true,
@@ -54,6 +50,11 @@ export async function validateUser(req, res) {
 export async function logout(req, res) {
     if (!req.session.user_id)
         return res.json({ status: false, data: { message: "Login First" } });
-    req.session.user_id = null;
+
+    await User.updateOne(
+        { _id: req.session.user_id },
+        { $unset: { sessionId: 1 } }
+    );
+    req.session.destroy();
     res.json({ status: true, data: { message: "Succesfully Logged Out" } });
 }

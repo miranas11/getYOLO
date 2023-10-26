@@ -2,15 +2,18 @@ import express from "express";
 import { connect } from "mongoose";
 const app = express();
 import session from "express-session";
+import { session_key } from "./config.js";
 
 import userRoute from "./routes/userRoute.js";
+import postRoute from "./routes/postRoute.js";
+
 import CustomError from "./utils/CustomError.js";
 
 app.use(express.json());
 
 app.use(
     session({
-        secret: "x7c59#S2g^r$H9npRDf@!L$B2jkQp8",
+        secret: session_key,
         resave: false,
         saveUninitialized: true,
     })
@@ -28,11 +31,12 @@ connect("mongodb://127.0.0.1:27017/Assignment")
         console.log("ERROR");
     });
 
-app.get("/", (req, res) => {
-    res.send("Home Page");
-});
-
 app.use("/user", userRoute);
+app.use("/posts", postRoute);
+
+app.get("/", (req, res) => {
+    res.json({ status: true, data: { message: "Server Running" } });
+});
 
 app.all("*", (req, res, next) => {
     next(new CustomError("Page not Found", 404));
